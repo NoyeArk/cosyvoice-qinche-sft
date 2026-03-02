@@ -1,0 +1,38 @@
+[project]
+name = "cosyvoice-qinche-sft"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "conformer>=0.3.2",
+    "deepspeed>=0.18.6",
+    "diffusers>=0.36.0",
+    "gdown>=5.2.1",
+    "hydra-core>=1.3.0",
+    "hyperpyyaml>=1.2.3",
+    "inflect>=7.5.0",
+    "librosa>=0.11.0",
+    "lightning>=2.6.1",
+    "matplotlib>=3.10.8",
+    "modelscope>=1.34.0",
+    "numpy>=2.2.6",
+    "omegaconf>=2.3.0",
+    "onnxruntime>=1.24.2",
+    "openai-whisper==20250625",
+    "pandas>=2.3.3",
+    "pyarrow>=23.0.1",
+    "pyworld>=0.3.5",
+    "scipy>=1.15.3",
+    "setuptools>=65.0.0,<82", # 82+ 移除了 pkg_resources，pyworld 等依赖需要
+    "soundfile>=0.13.1",
+    "swanlab>=0.7.8",
+    "tensorboard>=2.20.0",
+    "torch>=2.10.0",
+    "torchaudio>=2.10.0",
+    "torchcodec>=0.10.0",
+    "tqdm>=4.67.3",
+    "transformers==4.40.1",
+    "wetext>=0.1.2",
+    "wget>=3.2",
+]
