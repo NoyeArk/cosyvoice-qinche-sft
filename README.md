@@ -2,7 +2,6 @@
 
 基于 CosyVoice2 对恋与深空中的秦彻角色语音进行 SFT（监督微调），得到可复现该音色的 TTS 模型。
 
-
 ## 1. 环境配置
 
 - Python >= 3.10
@@ -43,18 +42,80 @@ cosyvoice-qinche-sft/
 └── exp/                   # 训练 checkpoint（由 run.sh 写入）
 ```
 
-## 3. 数据与配置
+## 3. 微调数据集准备
 
-### 原始数据格式
+### 3.1 数据处理流程
+
+从B站下载[秦彻语音合集，并按照下面的流程进行处理：](https://www.bilibili.com/video/BV1jieteQEmC/?vd_source=03c34461e4aa6d2b57aa2b6fada6e5c4&p=2)
+
+```Markdown
+原始长音频目录 (如 Sertua/)
+    │  1_1.wav, 1_2.wav, 1_10.wav, ...
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 步骤 1：按静音切分 (split.py)                                      │
+│ 每个长音频按静音区间切成多段短音频                                    │
+└─────────────────────────────────────────────────────────────────┘
+    ▼
+qinche_data/
+    ├── 1_1/   → 1.mp3, 2.mp3, 3.mp3, ...
+    ├── 1_2/   → 1.mp3, 2.mp3, ...
+    ├── 1_10/  → ...
+    └── ...
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 步骤 2：语音转文本 (extract_text_from_audio.py)                   │
+│ 对每个短音频做 ASR，生成同名 .txt                                   │
+└─────────────────────────────────────────────────────────────────┘
+    ▼
+qinche_data/1_1/
+    ├── 1.mp3, 1.txt
+    ├── 2.mp3, 2.txt
+    └── ...
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 步骤 3：删除过短文本及对应音频 (remove_short_txt_and_audio.py)       │
+│ 文本字符数 < 4 的条目：删除其 .txt 与同名音频                         │
+└─────────────────────────────────────────────────────────────────┘
+    ▼
+最终结果：每个子目录内仅保留「文本不少于 4 字」的 音频 + .txt 对
+```
+
+
+1. 步骤 1：按静音切分 ([split.py](http://split.py))
+  - 使用 `pydub` 的 `detect_silence` 检测静音段（参数：最小静音长度 300ms，静音阈值 -35dB）。
+    - 在相邻静音段中点处切分，得到多段「有声音频」。
+    - 支持格式由扩展名推断：`.wav` / `.mp3` / `.flac` / `.ogg` / `.m4a` / `.aac`。
+2. 步骤 2：语音转文本 (extract_text_from_audio.py)
+  - 对**指定目录内**的音频文件做语音识别，为每个音频生成**同名 .txt**（内容为识别文本）。
+    - 默认输出与音频同目录；也可通过 `--txt_dir` 指定单独 txt 目录。
+    - 识别后端：
+      - **funasr**（默认）：SenseVoiceSmall，中文识别并带标点，推荐。
+      - **whisper**：Whisper，可选 `--model_size`（tiny/base/small/medium/large），可配合 FunASR 标点模型做标点恢复。
+3. 步骤 3：删除过短文本及对应音频 (remove_short_txt_and_audio.py)
+  - 在**指定目录**内，找出「文本内容（strip 后）字符数 < N」的 .txt（默认 N=4）。
+    - 删除这些 .txt 以及**同名**的音频文件（按 .mp3 / .wav / .flac / .m4a / .ogg 匹配）。
+
+处理完后的数据集统计信息如下：
+
+
+| 项目          | 数量                           |
+| ----------- | ---------------------------- |
+| 总数据量        | 1788 条（每条 = 1 个音频 + 1 个对应文本） |
+| 训练集 (train) | 1455 条                       |
+| 测试集 (test)  | 333 条                        |
+
+
+### 3.2 数据格式
 
 - **根目录**由 `run.sh` 中 `data_dir` 指定（示例：`data/tts-data`）。
 - 其下需有 **train** 与 **test** 两个子集，每个子集内为「成对」的：
   - `*.wav`：音频（建议 24kHz，单声道；过长会被脚本或模型截断）
   - `*.normalized.txt`：与 wav 同名的文本，扩展名为 `.normalized.txt`  
   例如：`1_1000.wav` 对应 `1_1000.normalized.txt`。
-- **说话人 ID**：由 `local/prepare_data.py` 从文件名推断，为**第一个下划线前的部分**（如 `1_1000` → 说话人 `1`）。若希望秦彻单独一个 ID，可统一用同一前缀（如 `qinche_xxx.wav`）。
+- **说话人 ID**：由 `local/prepare_data.py` 从文件名推断，为**第一个下划线前的部分**（如 `1_1000` → 说话人 `1`）。若希望秦彻单独一个 ID，可统一用同一前缀（如 `qinche_xxx.wav`）.
 
-### 推理用文本（examples/my_tts_text.json）
+### 3.3 推理用文本（examples/my_tts_text.json）
 
 推理脚本会按 `spk_id` 取 JSON 中对应 key 的文本列表。当前示例为 `paimon`，做秦彻推理时需增加 `qinche` 键，例如：
 
@@ -72,18 +133,21 @@ cosyvoice-qinche-sft/
 
 ---
 
-## run.sh：Stage 0～7 说明
+## 4. run.sh
 
-| Stage | 说明 |
-|-------|------|
+run.sh 是本项目的主流程脚本，包含 7 个 stage，分别是：
+
+| Stage | 说明                                                                                                                                            |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | **0** | **数据准备**：将 `data_dir/{train,test}` 下成对 `.wav` 与 `.normalized.txt` 整理成 Kaldi 风格表文件（wav.scp、text、utt2spk、spk2utt），输出到 `data/train`、`data/test`。 |
-| **1** | **说话人嵌入**：用 CAM++ ONNX 提取每条/每个说话人 embedding，得到 `utt2embedding.pt`、`spk2embedding.pt`。 |
-| **2** | **语音离散 token**：用 speech_tokenizer_v2.onnx 生成 `utt2speech_token.pt`。 |
-| **3** | **Parquet 与 data.list**：将上述特征打成 parquet，并生成 `data.list`，供训练读取。 |
-| **4** | **说话人信息写入模型目录**：把当前 `spk_id` 的 embedding 写成 `spk2info.pt`，写入 `output_model_dir` 下 llm、flow、llm_flow；若目录为空会先复制预训练权重。 |
-| **5** | **微调**：按 `conf/cosyvoice2-qinche.yaml` 训练 LLM（及可选 flow），使用 `data/train.data.list`、`data/dev.data.list`，推理试听写入 `output/${spk_id}_inference`。 |
-| **6** | **模型平均**：对 llm / flow 的 checkpoint 做平均，得到最终 `llm.pt` / `flow.pt`。 |
-| **7** | **导出**：将 `output_model_dir` 下模型导出为 JIT / ONNX，便于推理加速。 |
+| **1** | **说话人嵌入**：用 CAM++ ONNX 提取每条/每个说话人 embedding，得到 `utt2embedding.pt`、`spk2embedding.pt`。                                                         |
+| **2** | **语音离散 token**：用 speech_tokenizer_v2.onnx 生成 `utt2speech_token.pt`。                                                                           |
+| **3** | **Parquet 与 data.list**：将上述特征打成 parquet，并生成 `data.list`，供训练读取。                                                                                |
+| **4** | **说话人信息写入模型目录**：把当前 `spk_id` 的 embedding 写成 `spk2info.pt`，写入 `output_model_dir` 下 llm、flow、llm_flow；若目录为空会先复制预训练权重。                           |
+| **5** | **微调**：按 `conf/cosyvoice2-qinche.yaml` 训练 LLM（及可选 flow），使用 `data/train.data.list`、`data/dev.data.list`，推理试听写入 `output/${spk_id}_inference`。   |
+| **6** | **模型平均**：对 llm / flow 的 checkpoint 做平均，得到最终 `llm.pt` / `flow.pt`。                                                                             |
+| **7** | **导出**：将 `output_model_dir` 下模型导出为 JIT / ONNX，便于推理加速。                                                                                         |
+
 
 可通过 `stage` 与 `stop_stage` 控制范围，例如只跑数据预处理：
 
@@ -97,25 +161,12 @@ stage=0 stop_stage=4 bash run.sh
 stage=5 stop_stage=5 bash run.sh
 ```
 
----
-
-## 快速开始（推荐流程）
-
-1. **准备数据**：将秦彻语音按「一句一文件」切好，每个 wav 配一个同名的 `.normalized.txt`，分别放入 `$data_dir/train` 和 `$data_dir/test`。
-2. **修改 run.sh**：设置 `data_dir`、`pretrained_model_dir`、`output_model_dir`、`spk_id=qinche`，以及 `stage`/`stop_stage`（如先 `0～4` 再 `5～7`）。
-3. **执行预处理**：`stage=0 stop_stage=4 bash run.sh`。
-4. **训练**：确认 `data/train.data.list`、`data/dev.data.list` 已生成（run.sh 中由 parquet 的 data.list 拼接），然后 `stage=5 stop_stage=5 bash run.sh`。
-5. **平均与导出**：`stage=6 stop_stage=7 bash run.sh`（或按需只跑 6 或只跑 7）。
-6. **推理**：使用 `my_inference/` 下脚本，或 CosyVoice 官方推理接口，指定 `output_model_dir` 与 `spk_id`；`examples/my_tts_text.json` 中需包含 key `qinche` 及对应试听文本。
-
-## 微调结果
+## 5. 微调结果
 
 运行 `stage=5 stop_stage=5 bash run.sh` 后，会在 `exp/cosyvoice2/llm/torch_ddp` 下生成 checkpoint，并在 `tensorboard/cosyvoice2/llm/torch_ddp` 下生成 tensorboard 日志。
 
-![tensorboard](img/train_loss.png)
+![tensorboard](./img/train_loss.png)
 
 语音复刻效果：
 
-​<audio id="audio" controls="" preload="none">
-      <source id="mp3" src="./output/qinche_inference/llm/qinche_sft_inference_0.wav">
-</audio>
+​<audio src="./output/qinche_inference/llm/qinche_sft_inference_0.wav"></audio>
