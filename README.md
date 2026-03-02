@@ -48,7 +48,7 @@ cosyvoice-qinche-sft/
 
 ### 3.1 数据处理流程
 
-从B站下载[秦彻语音合集，并按照下面的流程进行处理：](https://www.bilibili.com/video/BV1jieteQEmC/?vd_source=03c34461e4aa6d2b57aa2b6fada6e5c4&p=2)
+从B站下载[秦彻语音合集](https://www.bilibili.com/video/BV1jieteQEmC/?vd_source=03c34461e4aa6d2b57aa2b6fada6e5c4&p=2)，并按照下面的流程进行处理：
 
 ```Markdown
 原始长音频目录 (如 Sertua/)
@@ -107,6 +107,9 @@ qinche_data/1_1/
 | 训练集 (train) | 1455 条                       |
 | 测试集 (test)  | 333 条                        |
 
+示例如下：
+
+![data](./img/data.png)
 
 ### 3.2 数据格式
 
