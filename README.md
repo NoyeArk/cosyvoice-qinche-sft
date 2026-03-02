@@ -175,6 +175,6 @@ stage=5 stop_stage=5 bash run.sh
 语音复刻效果：
 
 1. [对，这就是我，万人敬仰的太乙真人，虽然有点婴儿肥，但也掩不住我逼人的帅气。](./output/qinche_inference/llm/qinche_sft_inference_0.wav)
-2.[梯度是一个多变量微积分中的概念，用于描述一个标量场在某一点处的最大变化率，以及变化最快的方向。](./output/qinche_inference/llm/qinche_sft_inference_1.wav)
-3.[在这宁静的夜晚，我们可以沿着小路慢慢走，感受微风拂面的轻柔，与自然融为一体。](./output/qinche_inference/llm/qinche_sft_inference_2.wav)
-4.[周日被我射熄火了，所以今天是周一。](./output/qinche_inference/llm/qinche_sft_inference_3.wav)
+2. [梯度是一个多变量微积分中的概念，用于描述一个标量场在某一点处的最大变化率，以及变化最快的方向。](./output/qinche_inference/llm/qinche_sft_inference_1.wav)
+3. [在这宁静的夜晚，我们可以沿着小路慢慢走，感受微风拂面的轻柔，与自然融为一体。](./output/qinche_inference/llm/qinche_sft_inference_2.wav)
+4. [周日被我射熄火了，所以今天是周一。](./output/qinche_inference/llm/qinche_sft_inference_3.wav)
