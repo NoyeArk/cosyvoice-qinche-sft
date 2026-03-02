@@ -169,4 +169,4 @@ stage=5 stop_stage=5 bash run.sh
 
 语音复刻效果：
 
-​<audio src="./output/qinche_inference/llm/qinche_sft_inference_0.wav"></audio>
+[试听：qinche_sft_inference_0.wav](./output/qinche_inference/llm/qinche_sft_inference_0.wav)
