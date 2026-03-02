@@ -16,6 +16,8 @@ pip install -e .
 
 运行前需执行 `source path.sh`（或由 `run.sh` 自动 source），以设置 `PYTHONPATH`（含本项目及 `third_party/Matcha-TTS`）。
 
+数据集和模型权重下载地址：[链接](https://modelscope.cn/models/horiki/qinche_audio_sft/files)，下载后放到 `data/` 目录下并进行解压。
+
 ## 2. 目录结构概览
 
 ```
@@ -169,4 +171,7 @@ stage=5 stop_stage=5 bash run.sh
 
 语音复刻效果：
 
-[试听：qinche_sft_inference_0.wav](./output/qinche_inference/llm/qinche_sft_inference_0.wav)
+[对，这就是我，万人敬仰的太乙真人，虽然有点婴儿肥，但也掩不住我逼人的帅气。](./output/qinche_inference/llm/qinche_sft_inference_0.wav)
+[梯度是一个多变量微积分中的概念，用于描述一个标量场在某一点处的最大变化率，以及变化最快的方向。](./output/qinche_inference/llm/qinche_sft_inference_1.wav)
+[在这宁静的夜晚，我们可以沿着小路慢慢走，感受微风拂面的轻柔，与自然融为一体。](./output/qinche_inference/llm/qinche_sft_inference_2.wav)
+[周日被我射熄火了，所以今天是周一。](./output/qinche_inference/llm/qinche_sft_inference_3.wav)

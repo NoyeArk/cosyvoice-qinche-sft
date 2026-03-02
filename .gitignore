@@ -5,5 +5,8 @@ tensorboard/
 
 # output
 exp/
-data/
+data/test/
+data/train/
+data/tts-data/
+data/tts-models/
 .tmp/
